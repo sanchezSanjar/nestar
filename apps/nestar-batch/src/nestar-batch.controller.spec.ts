@@ -11,7 +11,9 @@ describe('NestarBatchController', () => {
       providers: [NestarBatchService],
     }).compile();
 
-    nestarBatchController = app.get<NestarBatchController>(NestarBatchController);
+    nestarBatchController = app.get<NestarBatchController>(
+      NestarBatchController,
+    );
   });
 
   describe('root', () => {
