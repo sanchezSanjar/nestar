@@ -4,18 +4,18 @@ import * as request from 'supertest';
 import { NestarBatchModule } from './../src/nestar-batch.module';
 
 describe('NestarBatchController (e2e)', () => {
-  let app: INestApplication;
+	let app: INestApplication;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [NestarBatchModule],
-    }).compile();
+	beforeEach(async () => {
+		const moduleFixture: TestingModule = await Test.createTestingModule({
+			imports: [NestarBatchModule],
+		}).compile();
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
-  });
+		app = moduleFixture.createNestApplication();
+		await app.init();
+	});
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer()).get('/').expect(200).expect('Hello World!');
-  });
+	it('/ (GET)', () => {
+		return request(app.getHttpServer()).get('/').expect(200).expect('Hello World!');
+	});
 });
