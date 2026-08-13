@@ -10,17 +10,17 @@ import { DatabaseModule } from './database/database.module';
 
 @Module({
 	imports: [
-		ConfigModule.forRoot(),
-		GraphQLModule.forRoot({
+		ConfigModule.forRoot(), // .env
+		GraphQLModule.forRoot({ // Rest > GraphQL
 			driver: ApolloDriver,
 			playground: true,
 			uploads: false,
 			autoSchemaFile: true,
 		}),
-		ComponentsModule,
-		DatabaseModule,
+		ComponentsModule,	//Http
+		DatabaseModule,		//TCP
 	],
-	controllers: [AppController],
+	controllers: [AppController], //REST API
 	providers: [AppService, AppResolver],
 })
 export class AppModule {}
