@@ -16,9 +16,9 @@ export class MemberService {
             const result = await this.memberModel.create(input);
         // Authentication via TOKEN
             return result;
-        } catch(err) {
-            console.log("Error, Service.model:", err);
-            throw new BadRequestException(err);
+        } catch(err:any) {
+            console.log("Error, Service.model:", err.message);
+            throw new BadRequestException(Message.USED_MEMBER_NICK_OR_PHONE);
         }   
     }
     
@@ -26,7 +26,7 @@ export class MemberService {
         const {memberNick, memberPassword} = input;
         const response = await this.memberModel
         .findOne({memberNick: memberNick})
-        .select('+memberPassword')
+        .select('+memberPassword') 
         .exec();
 
         if(!response || response.memberStatus === MemberStatus.DELETE) {
