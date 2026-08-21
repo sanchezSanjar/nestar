@@ -44,7 +44,7 @@ export class MemberService {
 
 
         response.accessToken = await this.authService.createToken(response);
-        
+
         return response;
     }
 
@@ -55,4 +55,12 @@ export class MemberService {
     public async getMember(): Promise<string> {
         return 'getMember executed';
     }
+
+    public async getAllMembersByAdmin(): Promise<string> {
+		return await Promise.resolve('getAllMembersByAdmin executed');
+	}
+
+	public async updateMembersByAdmin(): Promise<string> {
+		return await Promise.resolve('updateMembersByAdmin executed');
+	}
 }
