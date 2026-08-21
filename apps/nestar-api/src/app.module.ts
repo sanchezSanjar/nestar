@@ -26,7 +26,7 @@ import { T } from './libs/types/common';
 						error?.message,
 				};
 				console.log("GRAPHQL GLOBAL ERR:", graphQLFormattedError);
-				return graphQLFormattedError;
+				return graphQLFormattedError; 
 			}
 		}),
 		ComponentsModule,	//Http
