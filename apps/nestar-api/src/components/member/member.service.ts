@@ -14,11 +14,11 @@ export class MemberService {
         private authService: AuthService,) {}
     
     public async signup(input: MemberInput): Promise<Member> {
-        // Hash Password
         input.memberPassword = await this.authService.hashPassword(input.memberPassword);
         try {
             const result = await this.memberModel.create(input);
         // Authentication via TOKEN
+        result.accessToken = await this.authService.createToken(result);
             return result;
         } catch(err:any) {
             console.log("Error, Service.model:", err.message);
@@ -39,10 +39,12 @@ export class MemberService {
             throw new InternalServerErrorException(Message.BLOCKED_USER);
         }
 
-        // Compare passwords
-        const isMatch = await this.authService.comparePassword(memberPassword, response.memberPassword!);
+        const isMatch = await this.authService.comparePassword(input.memberPassword, response.memberPassword!);
         if(!isMatch) throw new InternalServerErrorException(Message.WRONG_PASSWORD)
 
+
+        response.accessToken = await this.authService.createToken(response);
+        
         return response;
     }
 
