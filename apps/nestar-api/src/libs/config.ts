@@ -8,6 +8,13 @@ export const availableAgentSorts = [
 	'memberRank',
 ];
 
+export const availableMemberSorts = [
+	'createdAt',
+	'updatedAt',
+	'memberLikes',
+	'memberViews',
+];
+
 
 export const shapeIntoMongoObjectId = (target: any) => {
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
