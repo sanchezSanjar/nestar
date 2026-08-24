@@ -33,7 +33,7 @@ export class RolesGuard implements CanActivate {
 			request.body.authMember = authMember;
 			return true;
 		}
-        throw new UnauthorizedException(Message.NOT_AUTHENTICATED);
+         return false;
 		// description => http, rpc, gprs and etc are ignored
 	}
 }
