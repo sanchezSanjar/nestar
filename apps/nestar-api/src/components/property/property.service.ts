@@ -6,10 +6,13 @@ import { Message } from '../../libs/enums/common.enum';
 import { PropertyInput } from '../../libs/dto/property/property.input';
 import { MemberService } from '../member/member.service';
 import { ViewService } from '../view/view.service';
-import { ViewInput } from '../../libs/dto/view/view.input';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { PropertyStatus } from '../../libs/enums/property.enum';
 import { StatisticModifier, T } from '../../libs/types/common';
+import { PropertyUpdate } from '../../libs/dto/property/property.update';
+import moment from 'moment';
+
+
 
 @Injectable()
 export class PropertyService {
@@ -44,7 +47,7 @@ export class PropertyService {
 		if (!targetProperty) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		if (memberId) {
-			const viewInput: ViewInput = { memberId, viewRefId: propertyId, viewGroup: ViewGroup.PROPERTY };
+			const viewInput = { memberId, viewRefId: propertyId, viewGroup: ViewGroup.PROPERTY };
 			const newView = await this.viewService.recordView(viewInput);
 			if (newView) {
 				await this.propertyStatsEditor({ _id: propertyId, targetKey: 'propertyViews', modifier: 1 });
@@ -65,4 +68,33 @@ export class PropertyService {
 		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
 		return result;
 	}
+
+    public async updateProperty (memberId: ObjectId, input: PropertyUpdate): Promise<Property> {
+        let { propertyStatus, soldAt, deletedAt} = input;
+		const search: T = {
+			_id: input._id,
+            memberId:memberId,
+			propertyStatus: PropertyStatus.ACTIVE,
+		};
+
+		if (propertyStatus === PropertyStatus.SOLD) soldAt = moment().toDate();
+        else if (propertyStatus === PropertyStatus.DELETE) deletedAt = moment().toDate();
+
+
+        const result = await this.propertyModel
+            .findOneAndUpdate(search, input, {new: true})
+            .exec();
+        if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+
+        
+		if (soldAt || deletedAt) {
+            await this.memberService.memberStatsEditor({
+                _id:  memberId,
+                targetKey: 'memberProperties',
+                modifier: -1,
+            });
+        }
+
+        return result;
+    }
 }
