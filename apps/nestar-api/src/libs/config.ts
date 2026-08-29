@@ -15,6 +15,16 @@ export const availableMemberSorts = [
 	'memberViews',
 ];
 
+export const availableOptions = ['propertyBarter', 'propertyRent'];
+export const availablePropertySorts = [
+	'createdAt',
+	'updatedAt',
+	'propertyLikes',
+	'proppertyViews',
+	'proppertyRank',
+	'propertyPrice',
+]
+
  // IMAGE CONFIGURATION (config.js)
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
@@ -28,4 +38,13 @@ export const getSerialForImage = (filename: string) => {
 export const shapeIntoMongoObjectId = (target: any) => {
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 	return typeof target === 'string' ? new ObjectId(target) : target;
+};
+
+export const lookupMember = {
+	$lookup: {
+		from: 'members',
+		localField: 'memberId',
+		foreignField: '_id',
+		as: 'memberData',
+	},
 };
