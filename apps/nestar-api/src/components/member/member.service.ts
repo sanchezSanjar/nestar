@@ -167,7 +167,7 @@ export class MemberService {
     console.log('executed');
     const { _id, targetKey, modifier } = input;
 
-    const result = await this.memberModel.findOneAndUpdate(
+    const result = await this.memberModel.findByIdAndUpdate(
         _id,
         {
             $inc: { [targetKey]: modifier },
