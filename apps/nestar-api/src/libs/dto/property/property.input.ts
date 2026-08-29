@@ -1,8 +1,8 @@
 import { Directive, Field, InputType, Int } from '@nestjs/graphql';
 import { IsInt, IsNotEmpty, IsOptional, Length, Min, IsIn } from 'class-validator';
-import { PropertyLocation, PropertyType } from '../../enums/property.enum';
+import { PropertyLocation, PropertyType, PropertyStatus } from '../../enums/property.enum';
 import type { ObjectId } from 'mongoose';
-import { availableAgentSorts, availableOptions } from '../../config';
+import { availablePropertySorts, availableOptions } from '../../config';
 import { Direction } from '../../enums/common.enum';
 
 @InputType()
@@ -151,7 +151,7 @@ export class PropertiesInquiry {
 		limit: number;
 
 	@IsOptional()
-		@IsIn(availableAgentSorts)
+		@IsIn(availablePropertySorts)
 		@Field(() => String, {nullable:true})
 		sort?: string;
 
@@ -164,3 +164,36 @@ export class PropertiesInquiry {
 		search: PISearch;
 
 }
+
+@InputType()
+class APISearch {
+		@IsOptional()
+		@Field(() => PropertyStatus, { nullable: true })
+		propertyStatus?: PropertyStatus;
+		}
+
+@InputType()
+export class AgentPropertiesInquiry {
+		@IsNotEmpty()
+		@Min(1)
+		@Field(() => Int)
+		page: number;
+
+		@IsNotEmpty()
+		@Min(1)
+		@Field(() => Int)
+		limit: number;
+
+		@IsOptional()
+		@IsIn(availablePropertySorts)
+		@Field(() => String, { nullable: true })
+		sort?: string;
+
+		@IsOptional()
+		@Field(() => Direction, { nullable: true })
+		direction?: Direction;
+
+		@IsNotEmpty()
+		@Field(() => APISearch)
+		search: APISearch;
+		}
