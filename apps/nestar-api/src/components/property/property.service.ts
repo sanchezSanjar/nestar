@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
 import { Property, Properties } from '../../libs/dto/property/property';
 import { Message } from '../../libs/enums/common.enum';
-import { PropertyInput, PropertiesInquiry, AgentPropertiesInquiry } from '../../libs/dto/property/property.input';
+import { PropertyInput, PropertiesInquiry, AgentPropertiesInquiry, AllPropertiesInquiry } from '../../libs/dto/property/property.input';
 import { MemberService } from '../member/member.service';
 import { ViewService } from '../view/view.service';
 import { ViewGroup } from '../../libs/enums/view.enum';
@@ -224,4 +224,42 @@ export class PropertyService {
 
             return result[0];
             }
+
+    public async getAllPropertiesByAdmin(
+        input: AllPropertiesInquiry,
+        ): Promise<Properties> {
+        const { propertyStatus, propertyLocationList } = input.search;
+        const match: T = {};
+
+        const sort: T = {
+            [input.sort ?? 'createdAt']: input.direction ?? Direction.DESC,
+        };
+
+        if (propertyStatus) match.propertyStatus = propertyStatus;
+        if (propertyLocationList)
+            match.propertyLocation = { $in: propertyLocationList };
+
+        const result = await this.propertyModel
+            .aggregate([
+            { $match: match },
+            { $sort: sort },
+            {
+                $facet: {
+                list: [
+                    { $skip: (input.page - 1) * input.limit },
+                    { $limit: input.limit }, // property-1, property-2
+                    lookupMember,   //memberData: (memberDataValue)
+                    { $unwind: '$memberData' }, //memberData: memberDataValue
+                ],
+                metaCounter: [{ $count: 'total' }],
+                },
+            },
+            ])
+            .exec();
+
+        if (!result.length)
+            throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+
+        return result[0];
+        }
 }
