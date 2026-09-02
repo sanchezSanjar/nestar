@@ -52,7 +52,7 @@ export class BoardArticleResolver {
         }
 
     @UseGuards(WithoutGuard)
-    @Query((returns) => BoardArticle)
+    @Query((returns) => BoardArticles)
     public async getBoardArticles(
         @Args('input') input: BoardArticlesInquiry,
         @AuthMember('_id') memberId: ObjectId,
