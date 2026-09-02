@@ -62,7 +62,7 @@ export class CommentService {
 
     public async updateComment(memberId: ObjectId, input: CommentUpdate): Promise<Comment> {
         const {_id} = input;
-        const result = await this.commentModel.findByIdAndUpdate(
+        const result = await this.commentModel.findOneAndUpdate(
             {
                 _id: _id,
                 memberId: memberId,
