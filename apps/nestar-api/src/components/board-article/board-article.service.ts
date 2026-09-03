@@ -66,6 +66,12 @@ export class BoardArticleService {
             }
 
             // meLiked
+            const likeInput = {
+				memberId: memberId,
+				likeRefId: articleId,
+				likeGroup: LikeGroup.ARTICLE,
+			};
+			targetBoardArticle.meLiked = await this.likeService.checkLikeExistence(likeInput);
         }
 
         targetBoardArticle.memberData = await this.memberService.getMember(targetBoardArticle.memberId, memberId);
@@ -171,7 +177,7 @@ export class BoardArticleService {
 		return result;
 	}
 
-    
+
   public async getAllBoardArticlesByAdmin(input: AllBoardArticlesInquiry): Promise<BoardArticles> {
     const { articleStatus, articleCategory } = input.search;
     const match: T = {};

@@ -79,7 +79,10 @@ export class MemberService {
 				$in: [MemberStatus.ACTIVE, MemberStatus.BLOCK],
 			},
 		};
-		const targetMember = await this.memberModel.findOne(search).lean().exec();
+		const targetMember: Member | null = await this.memberModel
+			.findOne(search)
+			.lean()
+			.exec();
 		if (!targetMember) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 
@@ -99,8 +102,14 @@ export class MemberService {
 				targetMember.memberViews++;
 			}
 
-            //LIKES
-            //FOLLOWED
+            // meLiked
+			const likeInput = {
+				memberId: memberId,
+				likeRefId: targetId,
+				likeGroup: LikeGroup.MEMBER,
+			};
+			targetMember.meLiked = await this.likeService.checkLikeExistence(likeInput);
+			// meFollowed
 		}
 
 		return targetMember;
