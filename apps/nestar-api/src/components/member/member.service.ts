@@ -131,7 +131,7 @@ export class MemberService {
 			: [];
 	}
 
-	
+
     public async getAgents(memberId: ObjectId, input: AgentsInquiry): Promise<Members> {
 		const { text } = input.search;
 		const match: T = { memberType: MemberType.AGENT, memberStatus: MemberStatus.ACTIVE };
@@ -162,7 +162,7 @@ export class MemberService {
 		likeRefId: ObjectId,
 	): Promise<Member> {
 		const target: Member | null = await this.memberModel
-			.findOne({ _id: likeRefId, memberStatus: MemberStatus.ACTIVE })
+			.findOne({ _id: likeRefId, memberStatus: MemberStatus.ACTIVE }) //biz Like bosmoqchi bolgan member DB bormi?
 			.exec();
 		if (!target) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
@@ -175,8 +175,8 @@ export class MemberService {
 		// LIKE TOGGLE via Like modules
 		const modifier: number = await this.likeService.toggleLike(input);
 		const result = await this.memberStatsEditor({
-			_id: likeRefId,
-			targetKey: 'memberLikes',
+			_id: likeRefId, // like quyaotgan object
+			targetKey: 'memberLikes', //qaysi key
 			modifier: modifier,
 		});
 

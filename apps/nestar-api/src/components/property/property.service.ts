@@ -12,7 +12,7 @@ import { StatisticModifier, T } from '../../libs/types/common';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
 import { Direction } from '../../libs/enums/common.enum';
 import moment from 'moment';
-import { shapeIntoMongoObjectId, lookupMember  } from '../../libs/config';
+import { shapeIntoMongoObjectId, lookupMember, lookupAuthMemberLiked  } from '../../libs/config';
 import { LikeService } from '../like/like.service';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
@@ -119,6 +119,7 @@ export class PropertyService {
                     { $skip: (input.page - 1) * input.limit },
                     { $limit: input.limit },
                     // meLiked
+                    lookupAuthMemberLiked(memberId),
                     {
                     $lookup: {
                         from: 'members',

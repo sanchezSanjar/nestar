@@ -17,14 +17,14 @@ export class FollowService {
 
 
 	public async subscribe(followerId: ObjectId, followingId: ObjectId): Promise<Follower> {
-		// eslint-disable-next-line @typescript-eslint/no-base-to-string
+		// uziga uziga subs noooo
 		if (followerId.toString() === followingId.toString()) {
 			throw new InternalServerErrorException(Message.SELF_SUBSCRIPTION_DENIED);
 		}
-
+		//check if i follow or not?
 		const targetMember = await this.memberService.getMember(followingId, followerId);
 		if (!targetMember) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
-
+		// save follow
 		const result = await this.registerSubscription(followerId, followingId);
 
 		await this.memberService.memberStatsEditor({
@@ -41,10 +41,7 @@ export class FollowService {
 		return result;
 	}
 
-	private async registerSubscription(
-		followerId: ObjectId,
-		followingId: ObjectId,
-	): Promise<Follower> {
+	private async registerSubscription(followerId: ObjectId,followingId: ObjectId): Promise<Follower> {
 		try {
 			return await this.followModel.create({
 				followingId: followingId,
