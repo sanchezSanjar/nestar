@@ -120,14 +120,8 @@ export class PropertyService {
                     { $limit: input.limit },
                     // meLiked
                     lookupAuthMemberLiked(memberId),
-                    {
-                    $lookup: {
-                        from: 'members',
-                        localField: '_id',
-                        foreignField: 'memberData',
-                        as: 'memberData',
-                    },
-                    },
+                    lookupMember,
+                    { $unwind: '$memberData' },
                 ],
                 metaCounter: [{ $count: 'total' }],
                 },
