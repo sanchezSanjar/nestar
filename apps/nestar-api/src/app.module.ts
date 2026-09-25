@@ -19,13 +19,12 @@ import { SocketModule } from './socket/socket.module';
 			uploads: false,
 			autoSchemaFile: true,
 			formatError: (error: T) => {
+				const rawMessage =
+					error?.extensions?.originalError?.message ||
+					error?.message;
 				const graphQLFormattedError = {
-					code: error?.extensions.code,
-					message:
-						error?.extensions?.extension?.response?.message ||
-						error?.extension?.response?.message ||
-						error?.extensions.originalError ||
-						error?.message,
+					code: error?.extensions?.code,
+					message: Array.isArray(rawMessage) ? rawMessage.join(', ') : String(rawMessage),
 				};
 				console.log("GRAPHQL GLOBAL ERR:", graphQLFormattedError);
 				return graphQLFormattedError; 

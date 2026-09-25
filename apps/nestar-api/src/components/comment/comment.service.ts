@@ -11,11 +11,17 @@ import { CommentUpdate } from '../../libs/dto/comment/comment.update';
 import { Comments, Comment } from '../../libs/dto/comment/comment';
 import { lookupMember } from '../../libs/config';
 import { T } from '../../libs/types/common';
+import { PropertyStatus } from '../../libs/enums/property.enum';
+import { BoardArticleStatus } from '../../libs/enums/board-article.enum';
+import { MemberStatus } from '../../libs/enums/member.enum';
 
 @Injectable()
 export class CommentService {
   constructor(
     @InjectModel('Comment') private readonly commentModel: Model<Comment>,
+    @InjectModel('Property') private readonly propertyModel: Model<T>,
+    @InjectModel('BoardArticle') private readonly boardArticleModel: Model<T>,
+    @InjectModel('Member') private readonly memberModel: Model<T>,
     private readonly memberService: MemberService,
     private readonly propertyService: PropertyService,
     private readonly boardArticleService: BoardArticleService,
@@ -23,6 +29,9 @@ export class CommentService {
 
     public async createComment(memberId: ObjectId, input: CommentInput): Promise<Comment> {
     input.memberId = memberId;
+
+    const targetExists = await this.checkCommentTarget(input.commentGroup, input.commentRefId);
+    if (!targetExists) throw new BadRequestException(Message.NO_DATA_FOUND);
 
     let result: Comment | null = null;
     try {
@@ -32,29 +41,7 @@ export class CommentService {
         throw new BadRequestException(Message.CREATE_FAILED);
     }
 
-    switch (input.commentGroup) {
-        case CommentGroup.PROPERTY:
-        await this.propertyService.propertyStatsEditor({
-            _id: input.commentRefId,
-            targetKey: 'propertyComments',
-            modifier: 1,
-        });
-        break;
-        case CommentGroup.ARTICLE:
-        await this.boardArticleService.boardArticleStatsEditor({
-            _id: input.commentRefId,
-            targetKey: 'articleComments',
-            modifier: 1,
-        });
-        break;
-        case CommentGroup.MEMBER:
-        await this.memberService.memberStatsEditor({
-            _id: input.commentRefId,
-            targetKey: 'memberComments',
-            modifier: 1,
-        });
-        break;
-    }
+    await this.commentStatsEditor(input.commentGroup, input.commentRefId, 1);
 
     if (!result) throw new InternalServerErrorException(Message.CREATE_FAILED);
     return result;
@@ -74,7 +61,38 @@ export class CommentService {
             },
         );
         if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+
+        if (input.commentStatus === CommentStatus.DELETE) {
+            await this.commentStatsEditor(result.commentGroup, result.commentRefId, -1);
+        }
         return result;
+    }
+
+    private async checkCommentTarget(commentGroup: CommentGroup, commentRefId: ObjectId): Promise<boolean> {
+        switch (commentGroup) {
+            case CommentGroup.PROPERTY:
+                return !!(await this.propertyModel.exists({ _id: commentRefId, propertyStatus: PropertyStatus.ACTIVE }));
+            case CommentGroup.ARTICLE:
+                return !!(await this.boardArticleModel.exists({ _id: commentRefId, articleStatus: BoardArticleStatus.ACTIVE }));
+            case CommentGroup.MEMBER:
+                return !!(await this.memberModel.exists({ _id: commentRefId, memberStatus: MemberStatus.ACTIVE }));
+            default:
+                return false;
+        }
+    }
+
+    private async commentStatsEditor(commentGroup: CommentGroup, commentRefId: ObjectId, modifier: number): Promise<void> {
+        switch (commentGroup) {
+            case CommentGroup.PROPERTY:
+                await this.propertyService.propertyStatsEditor({ _id: commentRefId, targetKey: 'propertyComments', modifier });
+                break;
+            case CommentGroup.ARTICLE:
+                await this.boardArticleService.boardArticleStatsEditor({ _id: commentRefId, targetKey: 'articleComments', modifier });
+                break;
+            case CommentGroup.MEMBER:
+                await this.memberService.memberStatsEditor({ _id: commentRefId, targetKey: 'memberComments', modifier });
+                break;
+        }
     }
 
     public async getComments(memberId: ObjectId, input: CommentsInquiry): Promise<Comments> {
@@ -106,5 +124,14 @@ export class CommentService {
     public async removeCommentByAdmin(input: ObjectId): Promise<Comment> {
         const result = await this.commentModel.findByIdAndDelete(input);
         if (!result) throw new InternalServerErrorException(Message.REMOVE_FAILED);
+
+        // DELETE-status comments were already subtracted in updateComment
+        if (result.commentStatus === CommentStatus.ACTIVE) {
+            try {
+                await this.commentStatsEditor(result.commentGroup, result.commentRefId, -1);
+            } catch (err) {
+                console.log('Error, commentStatsEditor:', err instanceof Error ? err.message : err);
+            }
+        }
         return result;
     }}

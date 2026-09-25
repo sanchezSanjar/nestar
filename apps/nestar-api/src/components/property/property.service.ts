@@ -12,7 +12,7 @@ import { StatisticModifier, T } from '../../libs/types/common';
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
 import { Direction } from '../../libs/enums/common.enum';
 import moment from 'moment';
-import { shapeIntoMongoObjectId, lookupMember, lookupAuthMemberLiked  } from '../../libs/config';
+import { shapeIntoMongoObjectId, lookupMember, lookupAuthMemberLiked, escapeRegex, handleDuplicateKey } from '../../libs/config';
 import { LikeService } from '../like/like.service';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
@@ -67,7 +67,7 @@ export class PropertyService {
 			targetProperty.meLiked = await this.likeService.checkLikeExistence(likeInput);
 		}
 
-		targetProperty.memberData = await this.memberService.getMember(targetProperty.memberId, memberId);
+		targetProperty.memberData = await this.memberService.getMember(targetProperty.memberId, memberId, false);
 		return targetProperty;
 	}
 
@@ -81,13 +81,14 @@ export class PropertyService {
 			propertyStatus: PropertyStatus.ACTIVE,
 		};
 
-		if (propertyStatus === PropertyStatus.SOLD) soldAt = moment().toDate();
-        else if (propertyStatus === PropertyStatus.DELETE) deletedAt = moment().toDate();
+		if (propertyStatus === PropertyStatus.SOLD) soldAt = input.soldAt = moment().toDate();
+        else if (propertyStatus === PropertyStatus.DELETE) deletedAt = input.deletedAt = moment().toDate();
 
 
         const result = await this.propertyModel
             .findOneAndUpdate(search, input, {new: true})
-            .exec();
+            .exec()
+            .catch(handleDuplicateKey(Message.UPDATE_FAILED));
         if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
 
         
@@ -172,7 +173,7 @@ export class PropertyService {
                 $lte: squaresRange.end,
                 };
 
-            if (text) match.propertyTitle = { $regex: new RegExp(text, 'i') };
+            if (text) match.propertyTitle = { $regex: new RegExp(escapeRegex(text), 'i') };
 
             if (options) {
                 match['$or'] = options.map((ele) => {
@@ -183,6 +184,10 @@ export class PropertyService {
 
         public async getFavorites(memberId: ObjectId, input: OrdinaryInquiry):Promise<Properties> {
 		return await this.likeService.getFavoriteProperties(memberId, input)
+	    }
+
+        public async getVisited(memberId: ObjectId, input: OrdinaryInquiry): Promise<Properties> {
+		return await this.viewService.getVisitedProperties(memberId, input);
 	    }
 
         public async getAgentProperties(
@@ -303,15 +308,16 @@ export class PropertyService {
         };
 
         if (propertyStatus === PropertyStatus.SOLD)
-            soldAt = moment().toDate();
+            soldAt = input.soldAt = moment().toDate();
         else if (propertyStatus === PropertyStatus.DELETE)
-            deletedAt = moment().toDate();
+            deletedAt = input.deletedAt = moment().toDate();
 
         const result = await this.propertyModel
             .findOneAndUpdate(search, input, {
             new: true,
             })
-            .exec();
+            .exec()
+            .catch(handleDuplicateKey(Message.UPDATE_FAILED));
 
         if (!result)
             throw new InternalServerErrorException(Message.UPDATE_FAILED);

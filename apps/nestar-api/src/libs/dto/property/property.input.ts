@@ -1,5 +1,6 @@
 import { Directive, Field, InputType, Int } from '@nestjs/graphql';
-import { IsInt, IsNotEmpty, IsOptional, Length, Min, IsIn } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, Length, Min, IsIn , ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PropertyLocation, PropertyType, PropertyStatus } from '../../enums/property.enum';
 import type { ObjectId } from 'mongoose';
 import { availablePropertySorts, availableOptions } from '../../config';
@@ -155,11 +156,13 @@ export class PropertiesInquiry {
 		@Field(() => String, {nullable:true})
 		sort?: string;
 
-	@IsNotEmpty()
+	@IsOptional()
 		@Field(() => Direction, {nullable:true})
 		direction?: Direction;
 
 	@IsNotEmpty()
+		@ValidateNested()
+		@Type(() => PISearch)
 		@Field(() => PISearch)
 		search: PISearch;
 
@@ -194,6 +197,8 @@ export class AgentPropertiesInquiry {
 		direction?: Direction;
 
 		@IsNotEmpty()
+		@ValidateNested()
+		@Type(() => APISearch)
 		@Field(() => APISearch)
 		search: APISearch;
 }
@@ -205,7 +210,7 @@ class ALPISearch {
 	propertyStatus?: PropertyStatus;
 
 	@IsOptional()
-	@Field(() => PropertyLocation, { nullable: true })
+	@Field(() => [PropertyLocation], { nullable: true })
 	propertyLocationList?: PropertyLocation[];
 }
 
@@ -231,6 +236,8 @@ export class AllPropertiesInquiry {
 	direction?: Direction;
 
 	@IsNotEmpty()
+	@ValidateNested()
+	@Type(() => ALPISearch)
 	@Field(() => ALPISearch)
 	search: ALPISearch;
 }

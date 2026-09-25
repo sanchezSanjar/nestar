@@ -1,5 +1,7 @@
 import { Types } from 'mongoose';
+import { BadRequestException } from '@nestjs/common';
 import { T } from './types/common';
+import { Message } from './enums/common.enum';
 
 export const availableAgentSorts = [
 	'createdAt',
@@ -31,16 +33,25 @@ export const availableCommentSorts = ['createdAt', 'updatedAt']
 
  // IMAGE CONFIGURATION (config.js)
 import { v4 as uuidv4 } from 'uuid';
-import * as path from 'path';
 
 export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
-export const getSerialForImage = (filename: string) => {
-	const ext = path.parse(filename).ext;
-	return uuidv4() + ext;
+export const validUploadTargets = ['member', 'property', 'article'];
+
+const mimeExtensions: Record<string, string> = {
+	'image/png': '.png',
+	'image/jpg': '.jpg',
+	'image/jpeg': '.jpg',
+};
+
+// Extension comes from the validated mimetype, never from the client filename
+export const getSerialForImage = (mimetype: string) => {
+	return uuidv4() + mimeExtensions[mimetype];
 };
 
 export const shapeIntoMongoObjectId = (target: any) => {
-	return typeof target === 'string' ? new Types.ObjectId(target) : target;
+	if (typeof target !== 'string') return target;
+	if (!Types.ObjectId.isValid(target)) throw new BadRequestException(Message.BAD_REQUEST);
+	return new Types.ObjectId(target);
 };
 
 export const lookupAuthMemberLiked = (memberId: T, targetRefId: string = '$_id') => {
@@ -156,3 +167,22 @@ export const lookupFavorite = {
 };
 
 
+
+export const lookupVisit = {
+	$lookup: {
+		from: 'members',
+		localField: 'visitedProperty.memberId',
+		foreignField: '_id',
+		as: 'visitedProperty.memberData',
+	},
+};
+
+// Mongo duplicate-key errors (E11000) become a 400 instead of leaking as a 500
+export const handleDuplicateKey = (message: string) => (err: any) => {
+	if (err?.code === 11000) throw new BadRequestException(message);
+	throw err;
+};
+
+export const escapeRegex = (text: string): string => {
+	return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};

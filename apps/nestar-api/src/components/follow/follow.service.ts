@@ -22,7 +22,7 @@ export class FollowService {
 			throw new InternalServerErrorException(Message.SELF_SUBSCRIPTION_DENIED);
 		}
 		//check if i follow or not?
-		const targetMember = await this.memberService.getMember(followingId, followerId);
+		const targetMember = await this.memberService.getMember(followingId, followerId, false);
 		if (!targetMember) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 		// save follow
 		const result = await this.registerSubscription(followerId, followingId);
@@ -57,7 +57,7 @@ export class FollowService {
 		followerId: ObjectId,
 		followingId: ObjectId,
 	): Promise<Follower> {
-		const targetMember = await this.memberService.getMember(followingId, followerId);
+		const targetMember = await this.memberService.getMember(followingId, followerId, false);
 		if (!targetMember) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		const result = await this.followModel

@@ -8,7 +8,7 @@ import { Direction, Message } from '../../libs/enums/common.enum';
 import { BoardArticleStatus } from '../../libs/enums/board-article.enum';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { BoardArticleUpdate } from '../../libs/dto/board-article/board-article.update';
-import { lookupMember, shapeIntoMongoObjectId, lookupAuthMemberLiked } from '../../libs/config';
+import { lookupMember, shapeIntoMongoObjectId, lookupAuthMemberLiked, escapeRegex } from '../../libs/config';
 import { StatisticModifier, T } from '../../libs/types/common';
 import { MemberService } from '../member/member.service';
 import { LikeService } from '../like/like.service';
@@ -74,7 +74,7 @@ export class BoardArticleService {
 			targetBoardArticle.meLiked = await this.likeService.checkLikeExistence(likeInput);
         }
 
-        targetBoardArticle.memberData = await this.memberService.getMember(targetBoardArticle.memberId, memberId);
+        targetBoardArticle.memberData = await this.memberService.getMember(targetBoardArticle.memberId, memberId, false);
         return targetBoardArticle;
         }
   
@@ -117,7 +117,7 @@ export class BoardArticleService {
         };
 
         if (articleCategory) match.articleCategory = articleCategory;
-        if (text) match.articleTitle = { $regex: new RegExp(text, 'i') };
+        if (text) match.articleTitle = { $regex: new RegExp(escapeRegex(text), 'i') };
 
         if (input.search.memberId) {
             match.memberId = shapeIntoMongoObjectId(input.search.memberId);

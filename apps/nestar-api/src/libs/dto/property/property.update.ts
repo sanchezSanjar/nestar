@@ -9,49 +9,49 @@ export class PropertyUpdate {
     @Field(() => String)
     _id: ObjectId;
 
-    @IsNotEmpty()
+    @IsOptional()
     @Field(() => PropertyType,{nullable:true})
     propertyType?: PropertyType;
 
-    @IsNotEmpty()
+    @IsOptional()
     @Field(() => PropertyStatus,{nullable:true})
     propertyStatus?: PropertyStatus;
 
-    @IsNotEmpty()
+    @IsOptional()
     @Field(() => PropertyLocation,{nullable:true})
     propertyLocation?: PropertyLocation;
 
-    @IsNotEmpty()
+    @IsOptional()
     @Length(3, 100)
     @Field(() => String, {nullable:true})
     propertyAddress?: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @Length(3, 100)
     @Field(() => String, {nullable:true})
     propertyTitle?: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @Field(() => Number,{nullable:true})
     propertyPrice?: number;
 
-    @IsNotEmpty()
+    @IsOptional()
     @Field(() => Number, {nullable:true})
     propertySquare?: number;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsInt()
     @Min(1)
     @Field(() => Int,{nullable:true})
     propertyBeds?: number;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsInt()
     @Min(1)
     @Field(() => Int,{nullable:true})
     propertyRooms?: number;
 
-    @IsNotEmpty()
+    @IsOptional()
     @Field(() => [String],{nullable:true})
     propertyImages?: string[];
 

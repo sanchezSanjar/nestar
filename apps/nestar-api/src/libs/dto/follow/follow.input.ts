@@ -1,5 +1,6 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
-import { IsNotEmpty, IsOptional, Min } from 'class-validator';
+import { IsNotEmpty, IsOptional, Min , ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import type { ObjectId } from 'mongoose';
 
 @InputType()
@@ -26,6 +27,8 @@ export class FollowInquiry {
 	limit: number;
 
 	@IsNotEmpty()
+	@ValidateNested()
+	@Type(() => FollowSearch)
 	@Field(() => FollowSearch)
 	search: FollowSearch;
 }

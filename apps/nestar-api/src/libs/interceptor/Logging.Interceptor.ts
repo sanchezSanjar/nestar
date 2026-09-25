@@ -1,6 +1,6 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from "@nestjs/common";
 import { GqlContextType, GqlExecutionContext } from "@nestjs/graphql";
-import { stringify } from "querystring";
+import { Types } from "mongoose";
 import { Observable } from "rxjs";
 import { tap } from "rxjs/operators";
 
@@ -37,8 +37,22 @@ export class LoggingInterceptor implements NestInterceptor {
         return next.handle()
     }
 
-        private stringify(context: ExecutionContext): string {
-            return JSON.stringify(context).slice(0, 75);
+        private stringify(context: any): string {
+            return JSON.stringify(this.redact(context)).slice(0, 75);
+        }
+
+        private redact(value: any): any {
+            if (typeof value === 'string')
+                return value.replace(/(memberPassword\s*:\s*")(?:[^"\\]|\\.)*"/g, '$1***"');
+            if (Array.isArray(value)) return value.map((ele) => this.redact(ele));
+            if (value && typeof value === 'object' && !(value instanceof Date) && !Types.ObjectId.isValid(value)) {
+                const result = {};
+                for (const key of Object.keys(value?._doc ?? value)) {
+                    result[key] = key === 'memberPassword' ? '***' : this.redact(value[key]);
+                }
+                return result;
+            }
+            return value;
         }
         
       
