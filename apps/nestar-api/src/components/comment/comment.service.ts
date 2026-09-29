@@ -59,7 +59,7 @@ export class CommentService {
             {
                 new: true,
             },
-        );
+        ).exec();
         if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
 
         if (input.commentStatus === CommentStatus.DELETE) {
@@ -115,14 +115,14 @@ export class CommentService {
             metaCounter: [{ $count: 'total' }],
         },
         },
-    ]);
+    ]).exec();
     if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
     return result[0];
     }
 
     public async removeCommentByAdmin(input: ObjectId): Promise<Comment> {
-        const result = await this.commentModel.findByIdAndDelete(input);
+        const result = await this.commentModel.findByIdAndDelete(input).exec();
         if (!result) throw new InternalServerErrorException(Message.REMOVE_FAILED);
 
         // DELETE-status comments were already subtracted in updateComment
