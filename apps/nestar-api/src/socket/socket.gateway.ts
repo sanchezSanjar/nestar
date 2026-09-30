@@ -24,10 +24,9 @@ interface InfoPayLoad {
    	action: string;
 }
 
-@WebSocketGateway({ transports: ['websocket'], source: false })
+@WebSocketGateway({ transports: ['websocket'] })
 export class SocketGateway implements OnGatewayInit {
 	private logger: Logger = new Logger('SocketEventsGateway');
-	private summaryClient: number = 0;
 	private clientsAuthMap = new Map<WebSocket, Member | null>();
   	private messageList: MessagePayload[] = [];
 
@@ -37,7 +36,7 @@ export class SocketGateway implements OnGatewayInit {
 	server: Server;
 
 	public afterInit(server: Server) {
-		this.logger.verbose(`WebSocket Server Initialized & total: [${this.summaryClient}]`);
+		this.logger.verbose(`WebSocket Server Initialized & total: [${this.clientsAuthMap.size}]`);
 	}
 
 	private async retrieveAuth(req:any): Promise<Member | null> {
@@ -54,17 +53,18 @@ export class SocketGateway implements OnGatewayInit {
 	public async handleConnection(client: WebSocket, req: any) {
 		const authMember = await this.retrieveAuth(req);
 		console.log('authMember:', authMember);
+		// client may have disconnected while the token was being verified
+		if (client.readyState !== WebSocket.OPEN) return;
 		// client => authMember
 
-		this.summaryClient++;
 		this.clientsAuthMap.set(client, authMember);
 
 		const clientNick: string = authMember?.memberNick ?? "Guest";
-    	this.logger.verbose(`Connection [${clientNick}] & total [${this.summaryClient}]`);
+    	this.logger.verbose(`Connection [${clientNick}] & total [${this.clientsAuthMap.size}]`);
 
 		const infoMsg: InfoPayLoad = {
 			event: "info",
-			totalClients: this.summaryClient,
+			totalClients: this.clientsAuthMap.size,
 			memberData: authMember,
 			action: "joined"
 		};
@@ -74,17 +74,18 @@ export class SocketGateway implements OnGatewayInit {
 	}
 
 	public handleDisconnect(client: WebSocket) {
+		// ignore clients that closed before handleConnection registered them
+		if (!this.clientsAuthMap.has(client)) return;
 		const authMember = this.clientsAuthMap.get(client) ?? null;
-		this.summaryClient--;
 		this.clientsAuthMap.delete(client);
 
     	const clientNick: string = authMember?.memberNick ?? "Guest";
-    	this.logger.verbose(`Disconnection [${clientNick}] & total [${this.summaryClient}]`);
+    	this.logger.verbose(`Disconnection [${clientNick}] & total [${this.clientsAuthMap.size}]`);
 
 
 		const infoMsg: InfoPayLoad = {
 			event: "info",
-			totalClients: this.summaryClient,
+			totalClients: this.clientsAuthMap.size,
 			memberData: authMember,
       		action: "left"
 		};
@@ -92,7 +93,7 @@ export class SocketGateway implements OnGatewayInit {
 	}
 
 	@SubscribeMessage('message')
-	public async handleMessage(client: WebSocket, payload: any): Promise<string | void> {
+	public async handleMessage(client: WebSocket, payload: any): Promise<void> {
 		const authMember = this.clientsAuthMap.get(client) ?? null;
     	const newMessage: MessagePayload = {event: "message", text: payload, memberData: authMember};
 
